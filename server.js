@@ -451,3 +451,123 @@ app.listen(PORT, () => {
 });
 
 module.exports = app;
+
+// ==========================================
+// CRUD ENDPOINTS FOR BLENDS
+// ==========================================
+
+// Update CoreBlend
+app.put('/api/blends/:id', async (req, res) => {
+  try {
+    const { id } = req.params;
+    const updates = req.body;
+    
+    const result = await pool.query(
+      `UPDATE core_blends SET 
+        name = COALESCE($1, name),
+        wine_type = COALESCE($2, wine_type),
+        vintage = COALESCE($3, vintage),
+        core_appellation = COALESCE($4, core_appellation),
+        alcohol_target = COALESCE($5, alcohol_target),
+        target_cases_annual = COALESCE($6, target_cases_annual),
+        composition_profile = COALESCE($7, composition_profile),
+        notes = COALESCE($8, notes),
+        updated_at = CURRENT_TIMESTAMP
+      WHERE id = $9
+      RETURNING *`,
+      [
+        updates.name,
+        updates.wine_type,
+        updates.vintage,
+        updates.core_appellation,
+        updates.alcohol_target,
+        updates.target_cases_annual,
+        updates.composition_profile ? JSON.stringify(updates.composition_profile) : null,
+        updates.notes,
+        id
+      ]
+    );
+    
+    res.json({ success: true, blend: result.rows[0] });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// Delete CoreBlend
+app.delete('/api/blends/:id', async (req, res) => {
+  try {
+    const { id } = req.params;
+    await pool.query('DELETE FROM core_blends WHERE id = $1', [id]);
+    res.json({ success: true });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// ==========================================
+// CRUD ENDPOINTS FOR INVENTORY
+// ==========================================
+
+// Create Inventory Lot
+app.post('/api/inventory', async (req, res) => {
+  try {
+    const lot = req.body;
+    const result = await pool.query(
+      `INSERT INTO grape_inventory 
+        (varietal, vineyard, appellation, vintage, original_gallons, gallons_available, status, lot_number)
+      VALUES ($1, $2, $3, $4, $5, $5, 'Available', $6)
+      RETURNING *`,
+      [lot.varietal, lot.vineyard, lot.appellation, lot.vintage, lot.gallons, lot.lot_number]
+    );
+    res.json({ success: true, inventory: result.rows[0] });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// Update Inventory Lot
+app.put('/api/inventory/:id', async (req, res) => {
+  try {
+    const { id } = req.params;
+    const updates = req.body;
+    
+    const result = await pool.query(
+      `UPDATE grape_inventory SET
+        varietal = COALESCE($1, varietal),
+        vineyard = COALESCE($2, vineyard),
+        appellation = COALESCE($3, appellation),
+        vintage = COALESCE($4, vintage),
+        gallons_available = COALESCE($5, gallons_available),
+        lot_number = COALESCE($6, lot_number),
+        updated_at = CURRENT_TIMESTAMP
+      WHERE id = $7
+      RETURNING *`,
+      [
+        updates.varietal,
+        updates.vineyard,
+        updates.appellation,
+        updates.vintage,
+        updates.gallons_available,
+        updates.lot_number,
+        id
+      ]
+    );
+    
+    res.json({ success: true, inventory: result.rows[0] });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// Delete Inventory Lot
+app.delete('/api/inventory/:id', async (req, res) => {
+  try {
+    const { id } = req.params;
+    await pool.query('DELETE FROM grape_inventory WHERE id = $1', [id]);
+    res.json({ success: true });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
