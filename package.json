@@ -2,11 +2,11 @@
   "name": "mcpmp-api",
   "version": "1.0.0",
   "description": "McClain Cellars Production Management Platform API",
-  "main": "mcpmp_server.js",
+  "main": "server.js",
   "scripts": {
-    "start": "node mcpmp_server.js",
+    "start": "node server.js",
     "import": "node import_data.js",
-    "dev": "nodemon mcpmp_server.js"
+    "dev": "nodemon server.js"
   },
   "keywords": [
     "wine",
